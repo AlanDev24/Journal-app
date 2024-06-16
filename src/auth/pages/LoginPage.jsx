@@ -1,40 +1,55 @@
 import { Link as RouterLink } from "react-router-dom";
-import { Google, Password } from "@mui/icons-material";
-import { Button, Grid, Link, TextField, Typography } from "@mui/material";
+import { Google } from "@mui/icons-material";
+import {
+  Alert,
+  Button,
+  Grid,
+  Link,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { AuthLayout } from "../layout/AuthLayout";
 import { useForm } from "../../hooks";
-import { checkingCredentials, startGoogleSignIn } from "../../store/auth";
+import {
+  checkingCredentials,
+  startGoogleSignIn,
+  startLoginWithEmailPassword,
+} from "../../store/auth";
 import { useDispatch, useSelector } from "react-redux";
 import { useMemo } from "react";
 
 export const LoginPage = () => {
-  const { status } = useSelector((state) => state.auth );
+  const { status, errorMessage } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
 
-  const { email, password, onInputChange, formState,  } = useForm({
-    email: "abc@example.com",
-    password: "123123",
+  const { email, password, onInputChange, formState } = useForm({
+    email: "",
+    password: "",
   });
 
   const isAuthenticated = useMemo(() => status === "checking", [status]);
 
-  const dispatch = useDispatch();
-
   const onSubmit = (event) => {
     event.preventDefault();
     dispatch(checkingCredentials());
-
-    console.log({ email, password });
   };
 
   const onGoogleSignIn = () => {
     dispatch(startGoogleSignIn());
-    console.log("onGoogleSignIn");
+  };
+
+  const onEmailPasswordSignIn = () => {
+    const { email, password } = formState;
+    dispatch(startLoginWithEmailPassword(email, password));
   };
 
   return (
     <>
       <AuthLayout title="Login">
-        <form onSubmit={onSubmit}>
+        <form
+          onSubmit={onSubmit}
+          className="animate__animated animate__fadeIn animate__faster"
+        >
           <Grid container>
             <Grid item xs={12} sx={{ mt: 2 }}>
               <TextField
@@ -60,12 +75,16 @@ export const LoginPage = () => {
             </Grid>
 
             <Grid container spacing={2} sx={{ mb: 2, mt: 1 }}>
+              <Grid item xs={12} display={!!errorMessage ? "" : "none"}>
+                <Alert severity="error">{errorMessage}</Alert>
+              </Grid>
               <Grid item xs={12} sm={6}>
                 <Button
                   disabled={isAuthenticated}
                   type="submit"
                   variant="contained"
                   fullWidth
+                  onClick={onEmailPasswordSignIn}
                 >
                   Login
                 </Button>
